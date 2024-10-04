@@ -22,11 +22,14 @@ import shutil
 import sys
 import unicodedata
 import zipfile
+import re
 
 from datetime import datetime
 
 from pylint.lint import Run as RunPylint
 import pycodestyle
+
+from violation_checker import ViolationChecker
 
 PYLINT_ARGS = [
     '--exit-zero',  # always exit with code 0, even when problems are found
@@ -145,7 +148,6 @@ def pylint_context(stdout, workdir):
     sys.path = tmp_storage['path']
     sys.stdout = sys.__stdout__
 
-
 def lint_files(folders, author_pairs):
     """Run pylint and pycodestyle on all Python files anywhere within `folders'."""
     count = 0
@@ -180,9 +182,50 @@ def lint_files(folders, author_pairs):
                     print('\n')
         with open(folder / 'stylecheck.txt', 'w', encoding='utf-8') as outfile:
             if lintcache.tell() > 0:
-                outfile.write(lintcache.getvalue())
+                style_check = remove_unnecessary_violations(lintcache.getvalue())
+                violation_checker = ViolationChecker(style_check)
+                violation_checker.check_violations()
+                style_check += (f'\n-----Verstöße insgesamt-----'
+                                f'\n{violation_checker.list_violation()}')
+                outfile.write(style_check)
             else:
                 outfile.write("Alles sieht gut aus -- weiter so!\n")
+
+
+def remove_unnecessary_violations(style_check):
+    """Function to delete all lines with a violation to ignore"""
+    lines = style_check.splitlines()
+
+    filtered_lines = []
+
+    skip_count = 0
+
+    e501_pattern = re.compile(r"E501 line too long \((\d+) > 79 characters\)")
+
+    for i, line in enumerate(lines):
+        if skip_count > 0:
+            skip_count -= 1
+            continue
+        # Removing lines violations which are shorter than 100
+        match = e501_pattern.search(line)
+        if match:
+            line_length = int(match.group(1))
+            if line_length <= 99:
+                skip_count = 2
+                continue
+        # Upper case violations
+        elif "C0103" in line and "doesn't conform to UPPER_CASE naming style" in line:
+            continue
+        # Allowing variable and argument names with only one char
+        elif ("C0103" in line and "doesn't conform to snake_case naming style" in line
+            and ('Argument name "' in line or 'Variable name "' in line)):
+            start_index = line.find('"') + 1
+            end_index = line.find('"', start_index)
+            argument_name = line[start_index:end_index]
+            if len(argument_name) == 1:
+                continue
+        filtered_lines.append(line)
+    return "\n".join(filtered_lines)
 
 
 def fix_path(path: str) -> str:
@@ -234,9 +277,6 @@ def begin_grading(folder: pathlib.Path, ratings_file: pathlib.Path, check_style:
     for f in target_folders:
         target_name = "Bewertung " + sheet + " " + f.name.split('_')[0] + ratings_file.suffix
         shutil.copy(ratings_file, f / target_name)
-        # adding a feedback.txt
-        with open(f"{f}/Feedback {f.name.split('_')[0]}.txt", "w") as my_file:
-            pass
     print("Done!")
 
 
@@ -247,19 +287,12 @@ def finalise_grading(folder: pathlib.Path):
     for f in folders:
         target = f.parent / 'korrekturen'
         target.mkdir()
-        feedback_parent = f.parent / 'feedback' # file for the feedbacks
-        feedback_parent.mkdir()
         for handin in (x for x in f.iterdir() if x.name != '.DS_Store'):
             this_target = target / handin.name
             this_target.mkdir()
             # copy the stylecheck datas
             if (handin / 'stylecheck.txt').exists():
                 shutil.copy(handin / 'stylecheck.txt', this_target)
-            # copy the feedback datas
-            feedback_files = list(handin.glob('Feedback*'))
-            if feedback_files:
-                for feedback_file in feedback_files:
-                    shutil.copy(feedback_file, feedback_parent)
             # copy the grading datas
             glob = list(handin.glob('Bewertung *'))
             if len(glob) == 1:

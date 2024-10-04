@@ -28,7 +28,7 @@ blatt0
 Führt jetzt den Startbefehl aus:
 ```cmd
 cd ...\Tutorium\blatt0
-python eprgrader.py begin --table Bewertungstabelle_EPR_08.xlsx --no-stylecheck --tests
+python eprgrader.py begin --table Bewertungstabelle_EPR_4.xlsx
 ```
 
 Zusätzliche Optionen:
