@@ -29,6 +29,7 @@ from datetime import datetime
 from pylint.lint import Run as RunPylint
 import pycodestyle
 
+from rating_table_adjuster import get_points, update_rating
 from violation_checker import ViolationChecker
 
 PYLINT_ARGS = [
@@ -61,26 +62,20 @@ PYLINT_ARGS = [
     # E0102: function-redefined
     # E0211: no-method-argument [when it should at least have self]
     "E0001,E0102,E0211," +
-    # I0011: locally-disabled [to notify of 'pylint disable=...' comments]
-    # I0013: file-ignored
-    # I0020: suppressed-message
-    "I0011,I0013,I0020," +
     # W0104: pointless-statement
-    # W0106: expression-not-assigned
     # W0201: attribute-defined-outside-init
     # W0231: super-init-not-called
     # W0232: no-init
     # W0301: unnecessary-semicolon
     # W0311: bad-indentation
     # W0401: wildcard-import
-    # W0402: deprecated-module
     # W0404: reimported
     # W0603: global-statement
     # W0622: redefined-builtin
     # W0702: bare-except
     # W0705: duplicate-except
     # W0706: try-except-raise
-    "W0104,W0106,W0201,W0231,W0232,W0301,W0311,W0401,W0402,W0404,W0603,W0622,W0702,W0705,W0706"
+    "W0104,W0201,W0231,W0232,W0301,W0311,W0401,W0404,W0603,W0622,W0702,W0705,W0706"
 ]
 
 PYCODESTYLE_SELECT = [
@@ -125,10 +120,6 @@ PYCODESTYLE_SELECT = [
     'E714',
     # E721: use 'isinstance' instead of comparing types
     'E721',
-    # E731: use 'def' instead of assigning lambdas
-    'E731',
-    # E741-3: ambiguous single-character names (I, l, O) for var/class/func
-    'E741', 'E742', 'E743',
 ]
 tmp_storage = {}
 
@@ -183,13 +174,15 @@ def lint_files(folders, author_pairs):
         with open(folder / 'stylecheck.txt', 'w', encoding='utf-8') as outfile:
             if lintcache.tell() > 0:
                 style_check = remove_unnecessary_violations(lintcache.getvalue())
-                violation_checker = ViolationChecker(style_check)
-                violation_checker.check_violations()
-                style_check += (f'\n-----Verstöße insgesamt-----'
-                                f'\n{violation_checker.list_violation()}')
-                outfile.write(style_check)
             else:
-                outfile.write("Alles sieht gut aus -- weiter so!\n")
+                style_check = ""
+            violation_checker = ViolationChecker(style_check)
+            violation_checker.check_violations()
+            if violation_checker.count_violations(-1) == 0:
+                style_check = "Alles sieht gut aus -- weiter so!\n"
+            violation_string = violation_checker.list_violation()
+            style_check += f'\n{violation_string}'
+            outfile.write(style_check)
 
 
 def remove_unnecessary_violations(style_check):
@@ -284,7 +277,13 @@ def finalise_grading(folder: pathlib.Path):
     issues = 0
     print("Copying grades...")
     folders = list(folder.glob("**/abgaben"))
+    count = 0
     for f in folders:
+        overall_rating_path = ''
+        for file_name in os.listdir(f.parent):
+            if file_name.startswith('Bewertungen-'):
+                overall_rating_path = os.path.join(f.parent, file_name)
+                break
         target = f.parent / 'korrekturen'
         target.mkdir()
         for handin in (x for x in f.iterdir() if x.name != '.DS_Store'):
@@ -297,6 +296,10 @@ def finalise_grading(folder: pathlib.Path):
             glob = list(handin.glob('Bewertung *'))
             if len(glob) == 1:
                 shutil.copy(glob[0], this_target)
+                # If the overall rating file is given, the points will be written in
+                if len(overall_rating_path) != 0:
+                    student_name = handin.name.split('_')[0]
+                    update_rating(overall_rating_path, glob[0], student_name)
             elif not glob:
                 print(f" ! {handin.name}: no grading file")
                 issues += 1

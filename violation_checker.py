@@ -5,129 +5,140 @@ import re
 
 class ViolationChecker:
 
-    w0311 = 0  # Bad indention
-    w0401 = 0   # Wildcard import
-    w0622 = 0   # Redefined builtin
-    c0103 = 0   # Invalid name
-    c0116 = 0   # Missing function or method docstring
-    c0114 = 0   # Missing module docstring
-    c0121 = 0   # Singleton-comparison
-    c0325 = 0   # Superfluous-parens
-    c0413 = 0   # Wrong import position
-    c2100 = 0   # Missing author variable
-    c2101 = 0   # Malformed author variable
-    c2102 = 0   # Incorrectly assigned author variable
-    e0001 = 0   # Syntax error
-    e0102 = 0   # Function redefined
-    e231 = 0    # Missing whitespace after ','
-    e251 = 0    # Unexpected spaces around keyword / parameter equals
-    e261 = 0    # At least two spaces before inline comment
-    e265 = 0    # Block comment should start with '# '
-    e271 = 0    # Multiple space after keyword
-    e302 = 0    # Expected 2 blank lines
-    e501 = 0    # Line too long > 99
-    style_check = ''
+    violation_groups = [
+    'No deduction',
+    'Global statements',
+    'Imports',
+    'Author variable',
+    'Naming',
+    'Docstring',
+    'Spacing',
+    'Classes',
+    'Override',
+    'Syntax'
+    ]
+    # {violation_name: [amount of the violation, description, violation_group]}
+    violations = {'W0104': [0, 'Pointless statement', 0],
+    'W0201': [0, 'Attribute defined outside init', 7],
+    'W0231': [0, 'Super init not called', 7],
+    'W0232': [0, 'No init', 7],
+    'W0301': [0, 'Unnecessary semicolon', 0],
+    'W0311': [0, 'Bad indention', 6],
+    'W0401': [0, 'Wildcard import', 2],
+    'W0404': [0, 'Reimported', 2],
+    'W0603': [0, 'Global statement', 1],
+    'W0622': [0, 'Redefined builtin', 8],
+    'W0702': [0, 'Bare except', 0],
+    'W0705': [0, 'Duplicate except', 0],
+    'W0706': [0, 'Try except raise', 0],
 
+    'C0102': [0, 'Blacklisted name', 4],
+    'C0103': [0, 'Invalid name', 4],
+    'C0112': [0, 'Empty docstring', 5],
+    'C0114': [0, 'Missing module docstring', 5],
+    'C0115': [0, 'Missing class docstring', 5],
+    'C0116': [0, 'Missing function or method docstring', 5],
+    'C0121': [0, 'Singleton-comparison', 0],
+    'C0144': [0, 'Non ascii name', 4],
+    'C0321': [0, 'Multiple statements', 0],
+    'C0325': [0, 'Superfluous-parens', 0],
+    'C0410': [0, 'Multiple imports', 2],
+    'C0411': [0, 'Wrong import order', 2],
+    'C0412': [0, 'Ungrouped imports', 2],
+    'C0413': [0, 'Wrong import position', 2],
+    'C2100': [0, 'Missing author variable', 3],
+    'C2101': [0, 'Malformed author variable', 3],
+    'C2102': [0, 'Incorrectly assigned author variable', 3],
+
+    'E0001': [0, 'Syntax error', 9],
+    'E0102': [0, 'Function redefined', 8],
+    'E0211': [0, 'No Method argument', 7],
+    'E201': [0, 'Whitespace after \'(\'', 6],
+    'E202': [0, 'Whitespace before \')\'', 6],
+    'E203': [0, 'Whitespace before \':\'', 6],
+    'E211': [0, 'Whitespace before \'(\'', 6],
+    'E221': [0, 'Multiple spaces before operator', 6],
+    'E222': [0, 'Multiple spaces after operator', 6],
+    'E223': [0, 'Tab before operator', 6],
+    'E224': [0, 'Tab after operator', 6],
+    'E225': [0, 'Missing whitespace around operator', 6],
+    'E231': [0, 'Missing whitespace after \',\', \';\', or \':\'', 6],
+    'E251': [0, 'Unexpected spaces around keyword / parameter equals', 6],
+    'E261': [0, 'At least two spaces before inline comment', 6],
+    'E262': [0, 'Inline comment should start with \'# \'', 6],
+    'E265': [0, 'Block comment should start with \'# \'', 6],
+    'E271': [0, 'Multiple space after keyword', 6],
+    'E302': [0, 'Expected 2 blank lines', 6],
+    'E501': [0, 'Line too long > 99', 6],
+    'E502': [0, 'Backslash redundant between brackets', 0],
+    'E713': [0, 'Negative membership test should use \'not in\'', 0],
+    'E714': [0, 'Negative identity test should use \'is not\'', 0],
+    'E721': [0, 'Use \'isinstance\' instead of comparing types', 0]}
+    style_check = ''
 
     def __init__(self, style_check):
         self.style_check = style_check
 
-
     def check_violations(self):
-        w0311_violations = re.findall(r',*W0311.*', self.style_check)
-        self.w0311 = len(w0311_violations)
-
-        w0401_violations = re.findall(r',*W0401.*', self.style_check)
-        self.w0401 = len(w0401_violations)
-
-        w0622_violations = re.findall(r',*W0622.*', self.style_check)
-        self.w0622 = len(w0622_violations)
-
-        c0103_violations = re.findall(r',*C0103.*', self.style_check)
-        self.c0103 = len(c0103_violations)
-
-        c0114_violations = re.findall(r',*C0114.*', self.style_check)
-        self.c0114 = len(c0114_violations)
-
-        c0116_violations = re.findall(r',*C0116.*', self.style_check)
-        self.c0116 = len(c0116_violations)
-
-        c0121_violations = re.findall(r',*C0121.*', self.style_check)
-        self.c0121 = len(c0121_violations)
-
-        c0325_violations = re.findall(r',*C0325.*', self.style_check)
-        self.c0325 = len(c0325_violations)
-
-        c0413_violations = re.findall(r',*C0413.*', self.style_check)
-        self.c0413 = len(c0413_violations)
-
-        c2100_violations = re.findall(r',*C2100.*', self.style_check)
-        self.c2100 = len(c2100_violations)
-
-        c2101_violations = re.findall(r',*C2101.*', self.style_check)
-        self.c2101 = len(c2101_violations)
-
-        c2102_violations = re.findall(r',*C2102.*', self.style_check)
-        self.c2102 = len(c2102_violations)
-
-        e0001_violations = re.findall(r',*E0001.*', self.style_check)
-        self.e0001 = len(e0001_violations)
-
-        e0102_violations = re.findall(r',*E0102.*', self.style_check)
-        self.e0102 = len(e0102_violations)
-
-        e265_violations = re.findall(r',*E265.*', self.style_check)
-        self.e265 = len(e265_violations)
-
-        e501_violations = re.findall(r',*E501.*', self.style_check)
-        self.e501 = len(e501_violations)
-
-        e302_violations = re.findall(r',*E302.*', self.style_check)
-        self.e302 = len(e302_violations)
-
-        e231_violations = re.findall(r',*E231.*', self.style_check)
-        self.e231 = len(e231_violations)
-
-        e261_violations = re.findall(r',*E261.*', self.style_check)
-        self.e261 = len(e261_violations)
-
-        e271_violations = re.findall(r',*E271.*', self.style_check)
-        self.e271 = len(e271_violations)
-
-        e251_violations = re.findall(r',*E251.*', self.style_check)
-        self.e251 = len(e251_violations)
-
+        """Method to search for all violations"""
+        for violation_name, _ in self.violations.items():
+            all_violations = re.findall(rf',*{violation_name}.*', self.style_check)
+            self.violations[violation_name][0] = len(all_violations)
 
     def list_violation(self):
-        violations = ''
-        violations += (f'W03111 (Bad indention): {self.w0311}'
-                       f'\nW0401 (Wildcard import): {self.w0401}'
-                       f'\nW0622 (Redefined builtin): {self.w0622}'
-                       f'\nC0103 (Invalid name): {self.c0103}'
-                       f'\nC0114 (Missing module docstring): {self.c0114}'
-                       f'\nC0116 (Missing function or method docstring): {self.c0116}'
-                       f'\nC0121 (Singleton-comparison): {self.c0121}'
-                       f'\nC0325 (Superfluous-parens): {self.c0325}'
-                       f'\nC0413 (Wrong import position): {self.c0413}'
-                       f'\nC2100 (Missing author variable): {self.c2100}'
-                       f'\nC2101 (Missing author variable): {self.c2101}'
-                       f'\nC2102 (Incorrectly assigned author variable): {self.c2102}'
-                       f'\nE0001 (Syntax error): {self.e0001}'
-                       f'\nE0102 (Function redefined): {self.e0102}'
-                       f'\nE231 (Missing whitespace after \',\'): {self.e231}'
-                       f'\nE251 (Unexpected spaces around keyword / parameter equals): {self.e251}'
-                       f'\nE261 (At least two spaces before inline comment): {self.e261}'
-                       f'\nE265 (Block comment should start with \'# \'): {self.e265}'
-                       f'\nE271 (Multiple space after keyword): {self.e271}'
-                       f'\nE302 (Expected 2 blank lines): {self.e302}'
-                       f'\nE501 (Line too long > 99): {self.e501}')
-        return violations
+        """Method to return a list with all violations and the amount of the violations sort by
+        groups"""
+        violation_string = ''
+        violation_groups_strings = []
+        for i in range(10):
+            violation_groups_strings.append('')
+        for violation_name, value in self.violations.items():
+            violation_groups_strings[value[2]] += f'{violation_name} ({value[1]}): {value[0]}\n'
+        for i, violation_group in enumerate(self.violation_groups):
+            if i == 0: continue
+            violation_string += f'-----{violation_group}-----\n{violation_groups_strings[i]}'
+            violation_amount = self.count_violations(i)
+            violation_string += (f'\nFehler Insgesamt: {violation_amount}       Abzug: '
+                                 f'{self.count_deduction(i, violation_amount)} Punkt(e)\n\n')
+            if i == 9:
+                violation_string += f'-----No deduction-----\n{violation_groups_strings[0]}'
+                violation_string += f'\nFehler Insgesamt: {violation_amount}       Abzug: 0 Punkte'
+        return violation_string
 
+    def count_violations(self, violation_group):
+        """Method to count all violations"""
+        all_violations = 0
+        if violation_group == -1:
+            for _, value in self.violations.items():
+                all_violations += value[0]
+        else:
+            for _, value in self.violations.items():
+                if value[2] == violation_group:
+                    all_violations += value[0]
+        return all_violations
 
-if __name__ == '__main__':
-    with open('G02_Voll/abgaben/Cynthia Celoudis_691452_assignsubmission_file/stylecheck.txt', 'r',
-              encoding='utf-8') as file:
-        file_content = file.read()
-    violation_checker = ViolationChecker(file_content)
-    violation_checker.check_violations()
-    print(violation_checker.list_violation())
+    def count_deduction(self, violation_group, violation_amount):
+        """Method to count the deduction based on the group and amount"""
+        if violation_group == 0:
+            return 0
+        elif violation_group == 3:
+            if violation_amount > 0:
+                # The deduction for the author variable
+                return 2
+            else:
+                return 0
+        elif violation_group == 5:
+            # Violation for docstrings with a max deduction
+            return min(violation_amount*0.5, 2)
+        else:
+            # Cause group 6 is bigger it can get a higher deduction than 0.5
+            if violation_group == 6 and violation_amount > 30:
+                return 1
+            elif violation_group == 6 and violation_amount > 20:
+                return 0.75
+            elif violation_amount > 9:
+                return 0.5
+            elif violation_amount > 1:
+                return 0.25
+            else:
+                return 0
