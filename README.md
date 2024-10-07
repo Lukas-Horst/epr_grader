@@ -8,7 +8,7 @@ Ein Tool, um die Bewertung von EPR-Abgaben (und auch GPR-Abgaben) zu beschleunig
 Author-Variable) im selben Verzeichnis ab.
 2. Wenn ihr den automatischen Style-Check benutzen wollt, installiert `pylint`, `pycodestyle` 
    und `astroid` via `pip`:
-   `pip install pylint==2.15.0 pycodestyle==2.8.0 astroid==2.13.5`
+   `pip install pylint==2.15.0 pycodestyle==2.8.0 astroid==2.13.5 openpyxl pandas`
 
 ## Zu Beginn
 
@@ -28,12 +28,13 @@ blatt0
 Führt jetzt den Startbefehl aus:
 ```cmd
 cd ...\Tutorium\blatt0
-python eprgrader.py begin --table Bewertungstabelle_EPR_4.xlsx
+python eprgrader.py begin --table Bewertungstabelle_EPR_4.xlsx --no-stylecheck
 ```
 
 Zusätzliche Optionen:
 * `--no-stylecheck`: Überspringt die PEP8-Prüfung und verhindert das Anlegen der `stylecheck.txt`-Dateien für jede Abgabe.
 * `--pairs`: Überprüft die `__author__`-Variable nach dem Format für Paaraufgaben.
+* `--no-deduction`: Wenn es noch keinen Abzug für Stylefehler gibt.
 
 Hierdurch werden alle zip-Archive entpackt, die Bewertungstabellen kopiert und für jeden Teilnehmer
 entsprechend umbenannt, und ggf. der Stylchecker ausgeführt.

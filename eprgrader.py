@@ -8,7 +8,7 @@ Later on, collecting all the stylecheck files and grading tables into
 neat little archives for upload.
 """
 
-__author__ = "Adrian Welcker"
+__author__ = "Adrian Welcker, Lukas Horst"
 
 import argparse
 import contextlib
@@ -20,6 +20,8 @@ import pathlib
 import platform
 import shutil
 import sys
+from itertools import count
+
 import unicodedata
 import zipfile
 import re
@@ -29,7 +31,7 @@ from datetime import datetime
 from pylint.lint import Run as RunPylint
 import pycodestyle
 
-from rating_table_adjuster import get_points, update_rating
+from rating_table_adjuster import update_rating, update_style_deduction
 from violation_checker import ViolationChecker
 
 PYLINT_ARGS = [
@@ -122,7 +124,7 @@ PYCODESTYLE_SELECT = [
     'E721',
 ]
 tmp_storage = {}
-
+violations_checkers = {}
 
 @contextlib.contextmanager
 def pylint_context(stdout, workdir):
@@ -139,7 +141,7 @@ def pylint_context(stdout, workdir):
     sys.path = tmp_storage['path']
     sys.stdout = sys.__stdout__
 
-def lint_files(folders, author_pairs):
+def lint_files(folders, author_pairs, deduction: bool):
     """Run pylint and pycodestyle on all Python files anywhere within `folders'."""
     count = 0
     total = len(folders)
@@ -176,16 +178,17 @@ def lint_files(folders, author_pairs):
                 style_check = remove_unnecessary_violations(lintcache.getvalue())
             else:
                 style_check = ""
-            violation_checker = ViolationChecker(style_check)
+            violation_checker = ViolationChecker(style_check, deduction)
             violation_checker.check_violations()
             if violation_checker.count_violations(-1) == 0:
                 style_check = "Alles sieht gut aus -- weiter so!\n"
             violation_string = violation_checker.list_violation()
+            violations_checkers.update({folder.name.split('_')[0]: violation_checker})
             style_check += f'\n{violation_string}'
             outfile.write(style_check)
 
 
-def remove_unnecessary_violations(style_check):
+def remove_unnecessary_violations(style_check: str):
     """Function to delete all lines with a violation to ignore"""
     lines = style_check.splitlines()
 
@@ -237,7 +240,8 @@ def safe_extract_zip(zip_obj: zipfile.ZipFile, parent: pathlib.Path):
                 fout.write(fin.read())
 
 
-def begin_grading(folder: pathlib.Path, ratings_file: pathlib.Path, check_style: bool, author_pairs: bool):
+def begin_grading(folder: pathlib.Path, ratings_file: pathlib.Path, check_style: bool,
+                  author_pairs: bool, deduction: bool):
     print("Extracting downloads...")
     downloads = list(folder.glob('**/*.zip'))
     count = 0
@@ -262,14 +266,21 @@ def begin_grading(folder: pathlib.Path, ratings_file: pathlib.Path, check_style:
                       if f.is_dir()]
     if check_style:
         print("Running style check...")
-        lint_files(target_folders, author_pairs)
+        lint_files(target_folders, author_pairs, deduction)
     else:
         print("(Style check skipped.)")
     print("Copying ratings table...")
+    count = 0
     sheet = folder.resolve().name
     for f in target_folders:
+        count += 1
         target_name = "Bewertung " + sheet + " " + f.name.split('_')[0] + ratings_file.suffix
         shutil.copy(ratings_file, f / target_name)
+        if len(violations_checkers) != 0:
+            student_name = f.name.split('_')[0]
+            file_path = os.path.join(f, target_name)
+            update_style_deduction(file_path, violations_checkers[student_name], student_name)
+        print(f'({count}/{len(target_folders)}) Copy in {f.name}')
     print("Done!")
 
 
@@ -277,7 +288,6 @@ def finalise_grading(folder: pathlib.Path):
     issues = 0
     print("Copying grades...")
     folders = list(folder.glob("**/abgaben"))
-    count = 0
     for f in folders:
         overall_rating_path = ''
         for file_name in os.listdir(f.parent):
@@ -286,7 +296,10 @@ def finalise_grading(folder: pathlib.Path):
                 break
         target = f.parent / 'korrekturen'
         target.mkdir()
-        for handin in (x for x in f.iterdir() if x.name != '.DS_Store'):
+        count = 0
+        handins = [x for x in f.iterdir() if x.name != '.DS_Store']
+        for handin in handins:
+            count += 1
             this_target = target / handin.name
             this_target.mkdir()
             # copy the stylecheck datas
@@ -295,6 +308,7 @@ def finalise_grading(folder: pathlib.Path):
             # copy the grading datas
             glob = list(handin.glob('Bewertung *'))
             if len(glob) == 1:
+                print(f'({count}/{len(handins)}) Copying from {handin.name}')
                 shutil.copy(glob[0], this_target)
                 # If the overall rating file is given, the points will be written in
                 if len(overall_rating_path) != 0:
@@ -338,16 +352,20 @@ def main():
                               help='whether or not to run style checks')
     begin_parser.add_argument('--pairs', action=argparse.BooleanOptionalAction, default=False,
                               help='whether or not to validate __author__ variables for pairs')
+    begin_parser.add_argument('--deduction', action=argparse.BooleanOptionalAction, default=True,
+                              help='whether or not to give deduction on the style')
     lint_parser = subparsers.add_parser('relint', help='re-run pylint')
     lint_parser.add_argument('--pairs', action=argparse.BooleanOptionalAction, default=False,
                              help='whether or not to validate __author__ variables for pairs')
     subparsers.add_parser('finalise', help='package results for upload')
     args = parser.parse_args()
     if args.verb == 'begin':
-        begin_grading(pathlib.Path(args.folder), pathlib.Path(args.table), args.stylecheck, args.pairs)
+        begin_grading(pathlib.Path(args.folder), pathlib.Path(args.table), args.stylecheck,
+                      args.pairs, args.deduction)
     elif args.verb == 'relint':
         lint_files([f for f in itertools.chain.from_iterable(
-            (group.iterdir() for group in pathlib.Path(args.folder).glob('**/abgaben'))) if f.is_dir()], args.pairs)
+            (group.iterdir() for group in pathlib.Path(args.folder).glob('**/abgaben'))) if
+                    f.is_dir()], args.pairs, args.deduction)
     elif args.verb == 'finalise':
         finalise_grading(pathlib.Path(args.folder))
 

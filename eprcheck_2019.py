@@ -1,3 +1,5 @@
+__author__ = "Adrian Welcker"
+
 import re
 import astroid
 from pylint.checkers import BaseChecker
