@@ -7,8 +7,7 @@ Ein Tool, um die Bewertung von EPR-Abgaben (und auch GPR-Abgaben) zu beschleunig
 1. Legt `eprgrader.py` (das eigentliche Programm), `eprcheck_2019.py` (das pylint-Plugin für die
 Author-Variable) und `violation_checker.py` (Klasse um die Stylefehler zusammenzuzählen) im 
    selben Verzeichnis ab.
-2. Wenn ihr den automatischen Style-Check benutzen wollt, installiert `pylint`, `pycodestyle` 
-   und `astroid` via `pip`:
+2. Wenn ihr den automatischen Style-Check benutzen wollt, installiert folgendes via `pip`:
    `pip install pylint==2.15.0 pycodestyle==2.8.0 astroid==2.13.5 openpyxl pandas`
 
 ## Zu Beginn
