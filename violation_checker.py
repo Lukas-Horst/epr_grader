@@ -101,11 +101,15 @@ class ViolationChecker:
             if i == 0: continue
             violation_string += f'-----{violation_group}-----\n{violation_groups_strings[i]}'
             violation_amount = self.count_violations(i)
-            violation_string += (f'\nFehler Insgesamt: {violation_amount}       Abzug: '
-                                 f'{self.count_deduction(i, violation_amount)} Punkte\n\n')
+            total_violations = f'\nFehler Insgesamt: {violation_amount}'
+            possible_deduction = f'Möglicher Abzug: {self.count_deduction(i, 100)}'
+            deduction = f'Abzug: {self.count_deduction(i, violation_amount)} Punkte\n\n'
+            violation_string += f'{total_violations}     {possible_deduction}     {deduction}'
             if i == 9:
-                violation_string += f'-----No deduction-----\n{violation_groups_strings[0]}'
-                violation_string += f'\nFehler Insgesamt: {violation_amount}       Abzug: 0 Punkte'
+                total_violations = f'\nFehler Insgesamt: {violation_amount}'
+                possible_deduction = f'Möglicher Abzug: 0'
+                deduction = 'Abzug: 0 Punkte'
+                violation_string += f'{total_violations}     {possible_deduction}     {deduction}'
         return violation_string
 
     def count_violations(self, violation_group: int):
@@ -138,12 +142,7 @@ class ViolationChecker:
             # Violation for docstrings with a max deduction
             return min(violation_amount*0.5, 2)
         else:
-            # Cause group 6 is bigger it can get a higher deduction than 0.5
-            if violation_group == 6 and violation_amount > 30:
-                return 1
-            elif violation_group == 6 and violation_amount > 20:
-                return 0.75
-            elif violation_amount > 9:
+            if violation_amount > 9:
                 return 0.5
             elif violation_amount > 1:
                 return 0.25
