@@ -109,7 +109,4 @@ dabei zu reparieren. Manche sind aber so kaputt, dass das Tool einfach abstürzt
 hilft nur, die betroffene Datei aus dem heruntergeladenen Zip zu entfernen und nochmal von vorne
 anzufangen. Danach kann man die kaputte Datei von Hand ergänzen und ggf. den `relint`-Befehl nutzen.
 
-Bei anderen Problemen, schreibt entweder in das Forum des Tutorenkurses, oder schreibt mir eine
-E-Mail: [welcker@em.uni-frankfurt.de](mailto:welcker@em.uni-frankfurt.de).
-
--- Adrian [2021-11-01]
+Bei anderen Problemen, merkt es unter Issues in dem Repo an.
