@@ -215,6 +215,8 @@ def remove_unnecessary_violations(style_check: str):
             if line_length <= 99:
                 skip_count = 2
                 continue
+            else:
+                line = line.replace('79', '99')
         # Upper case violations
         elif "C0103" in line and "doesn't conform to UPPER_CASE naming style" in line:
             continue
@@ -226,6 +228,9 @@ def remove_unnecessary_violations(style_check: str):
             argument_name = line[start_index:end_index]
             if len(argument_name) == 1:
                 continue
+        # Allowing all module names
+        elif "C0103" in line and "Module name" in line:
+            continue
         filtered_lines.append(line)
     return "\n".join(filtered_lines)
 
