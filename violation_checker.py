@@ -108,6 +108,7 @@ class ViolationChecker:
             violation_string += f'{total_violations}     {possible_deduction}     {deduction}'
             if i == 9:
                 violation_string += f'-----No deduction-----\n{violation_groups_strings[0]}'
+                violation_amount = self.count_violations(0)
                 total_violations = f'\nFehler Insgesamt: {violation_amount}'
                 possible_deduction = f'Möglicher Abzug: 0 Punkte'
                 deduction = 'Abzug: 0 Punkte'
