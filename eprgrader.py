@@ -290,7 +290,8 @@ def begin_grading(folder: pathlib.Path, ratings_file: pathlib.Path, check_style:
         if len(violations_checkers) != 0:
             student_name = f.name.split('_')[0]
             file_path = os.path.join(f, target_name)
-            update_style_deduction(file_path, violations_checkers[student_name], student_name)
+            if student_name in violations_checkers:
+                update_style_deduction(file_path, violations_checkers[student_name], student_name)
         print(f'({count}/{len(target_folders)}) Copy in {f.name}')
     print("Done!")
 

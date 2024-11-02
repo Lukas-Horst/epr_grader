@@ -21,8 +21,10 @@ class ViolationChecker:
     __violations = None
     _style_check = ''
     __deduction = None
+    __module_and_class_docstrings = None
 
     def __init__(self, style_check: str, no_deduction: bool):
+        self.__module_and_class_docstrings = 0
         self._style_check = style_check
         self.__deduction = no_deduction
         self.__violations = {'W0104': [0, 'Pointless statement', 0],
@@ -86,6 +88,8 @@ class ViolationChecker:
         """Method to search for all violations"""
         for violation_name, _ in self.__violations.items():
             all_violations = re.findall(rf',*{violation_name}.*', self._style_check)
+            if violation_name == 'C0114' or violation_name == 'C0115':
+                self.__module_and_class_docstrings += len(all_violations)
             self.__violations[violation_name][0] = len(all_violations)
 
     def list_violation(self):
@@ -123,7 +127,7 @@ class ViolationChecker:
                 all_violations += value[0]
         else:
             for _, value in self.__violations.items():
-                if value[2] == violation_group:
+                if value[2] == violation_group or (value[2] == 10 and violation_group == 5):
                     all_violations += value[0]
         return all_violations
 
@@ -143,7 +147,8 @@ class ViolationChecker:
             return 0
         elif violation_group == 5:
             # Violation for docstrings with a max deduction
-            return min(violation_amount*0.5, 2)
+            # Module and class docstring gets the half amount of deduction
+            return min(violation_amount*0.5 - self.__module_and_class_docstrings*0.25, 2)
         else:
             if violation_amount > 9:
                 return 0.5
