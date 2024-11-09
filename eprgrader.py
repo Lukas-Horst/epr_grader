@@ -129,6 +129,7 @@ PYCODESTYLE_SELECT = [
 tmp_storage = {}
 violations_checkers = {}
 
+
 @contextlib.contextmanager
 def pylint_context(stdout, workdir):
     """Temporarily change stdout and working directory."""
@@ -144,6 +145,7 @@ def pylint_context(stdout, workdir):
     sys.path = tmp_storage['path']
     sys.stdout = sys.__stdout__
 
+
 def lint_files(folders, author_pairs, deduction: bool):
     """Run pylint and pycodestyle on all Python files anywhere within `folders'."""
     count = 0
@@ -153,7 +155,8 @@ def lint_files(folders, author_pairs, deduction: bool):
     for folder in folders:
         count += 1
         print(f" ({str(count).rjust(len(str(total)))}/{total}) Checking {folder.name}")
-        pythons = list(map(pathlib.Path.resolve, filter(lambda p: "__MACOSX" not in p.parts, folder.glob('**/*.py'))))
+        pythons = list(map(pathlib.Path.resolve,
+                           filter(lambda p: "__MACOSX" not in p.parts, folder.glob('**/*.py'))))
         if not pythons:
             continue
         pycount = 0
@@ -161,7 +164,8 @@ def lint_files(folders, author_pairs, deduction: bool):
         lintcache = io.StringIO()
         for file in pythons:
             pycount += 1
-            print(f"  ({str(pycount).rjust(len(str(pytotal)))}/{pytotal}) Running pylint for {file.name}")
+            print(
+                f"  ({str(pycount).rjust(len(str(pytotal)))}/{pytotal}) Running pylint for {file.name}")
             with pylint_context(lintcache, folder):
                 try:
                     RunPylint(PYLINT_ARGS + [str(file)])
@@ -170,8 +174,9 @@ def lint_files(folders, author_pairs, deduction: bool):
                         print(f"  [Pylint attempted to exit with code {e.code}]", file=sys.stderr)
                         raise RuntimeError from e
                 pycount += 1
-                print(f"  ({str(pycount).rjust(len(str(pytotal)))}/{pytotal}) Running pycodestyle for {file.name}",
-                      file=sys.__stdout__)
+                print(
+                    f"  ({str(pycount).rjust(len(str(pytotal)))}/{pytotal}) Running pycodestyle for {file.name}",
+                    file=sys.__stdout__)
                 print('\n')
                 result = style.check_files([file])
                 if result.total_errors > 0:
@@ -222,7 +227,7 @@ def remove_unnecessary_violations(style_check: str):
             continue
         # Allowing variable and argument names with only one char
         elif ("C0103" in line and "doesn't conform to snake_case naming style" in line
-            and ('Argument name "' in line or 'Variable name "' in line)):
+              and ('Argument name "' in line or 'Variable name "' in line)):
             start_index = line.find('"') + 1
             end_index = line.find('"', start_index)
             argument_name = line[start_index:end_index]
@@ -230,6 +235,10 @@ def remove_unnecessary_violations(style_check: str):
                 continue
         # Allowing all module names
         elif "C0103" in line and "Module name" in line:
+            continue
+        # Ignoring a missing whitespace after : in a print command
+        elif "E231" in line and "after ':'" in line and "print(" in lines[i + 1]:
+            skip_count = 2
             continue
         filtered_lines.append(line)
     return "\n".join(filtered_lines)
@@ -273,7 +282,8 @@ def begin_grading(folder: pathlib.Path, ratings_file: pathlib.Path, check_style:
         with zipfile.ZipFile(file, 'r') as zip_obj:
             # zip_obj.extractall(file.parent)
             safe_extract_zip(zip_obj, file.parent)
-    target_folders = [f for f in itertools.chain.from_iterable((group.iterdir() for group in folder.glob('**/abgaben')))
+    target_folders = [f for f in itertools.chain.from_iterable(
+        (group.iterdir() for group in folder.glob('**/abgaben')))
                       if f.is_dir()]
     if check_style:
         print("Running style check...")
@@ -379,7 +389,7 @@ def update_style_deduction(file_path: str, violation_checker: ViolationChecker, 
         if cell.value is not None:
             # Updating the deduction for the author variable
             if '__author__' in cell.value:
-                ws[f'C{i+1}'].value = -violation_checker.count_deduction(3)
+                ws[f'C{i + 1}'].value = -violation_checker.count_deduction(3)
                 ws[f'C{i + 1}'].font = Font(color='FF0000')
             # All deductions except the author variable and docstrings
             elif 'o.g. Fehler' in cell.value:
@@ -388,15 +398,15 @@ def update_style_deduction(file_path: str, violation_checker: ViolationChecker, 
                     if j == 3 or j == 5:
                         continue
                     deduction -= violation_checker.count_deduction(j)
-                ws[f'C{i+1}'].value = deduction
-                ws[f'C{i+1}'].font = Font(color='FF0000')
+                ws[f'C{i + 1}'].value = deduction
+                ws[f'C{i + 1}'].font = Font(color='FF0000')
             # Deduction for docstrings
             elif 'Abzug bei' in cell.value:
-                ws[f'C{i+1}'].value = -violation_checker.count_deduction(5)
+                ws[f'C{i + 1}'].value = -violation_checker.count_deduction(5)
                 ws[f'C{i + 1}'].font = Font(color='FF0000')
             # Updating the function for the total points
             elif 'Summe' in cell.value:
-                ws[f'C{i+1}'] = f'=MAX(0, SUM(C1:C{i}))'
+                ws[f'C{i + 1}'] = f'=MAX(0, SUM(C1:C{i}))'
                 break
     wb.save(file_path)
     wb.close()
@@ -443,15 +453,18 @@ def update_rating(overall_rating_path: str, student_rating_path: str, student_na
 
 def main():
     """The function main is where execution begins."""
-    print('EPRgrader v3/221031 running on ', datetime.now(), ' [', platform.platform(terse=True), ' ',
+    print('EPRgrader v3/221031 running on ', datetime.now(), ' [', platform.platform(terse=True),
+          ' ',
           platform.machine(), ']', sep='')
     parser = argparse.ArgumentParser(description="Assist in grading EPR assignments.")
     # parser.add_argument('verb', type=str, choices=('begin', 'relint', 'finalise'))
-    parser.add_argument('-f', '--folder', type=str, help='the folder in which to operate (default: the current folder)',
+    parser.add_argument('-f', '--folder', type=str,
+                        help='the folder in which to operate (default: the current folder)',
                         default='.')
     subparsers = parser.add_subparsers(metavar='verb', dest='verb', required=True)
     begin_parser = subparsers.add_parser('begin', help='begin a new grading process')
-    begin_parser.add_argument('--table', metavar='file', help='Ratings table file to copy to each folder',
+    begin_parser.add_argument('--table', metavar='file',
+                              help='Ratings table file to copy to each folder',
                               required=True)
     begin_parser.add_argument('--stylecheck', action=argparse.BooleanOptionalAction, default=True,
                               help='whether or not to run style checks')
