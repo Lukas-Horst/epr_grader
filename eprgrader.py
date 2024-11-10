@@ -156,7 +156,8 @@ def lint_files(folders, author_pairs, deduction: bool):
         count += 1
         print(f" ({str(count).rjust(len(str(total)))}/{total}) Checking {folder.name}")
         pythons = list(map(pathlib.Path.resolve,
-                           filter(lambda p: "__MACOSX" not in p.parts, folder.glob('**/*.py'))))
+                            filter(lambda p: "__MACOSX" not in p.parts and ".venv" not in p.parts,
+                                    folder.glob('**/*.py'))))
         if not pythons:
             continue
         pycount = 0
