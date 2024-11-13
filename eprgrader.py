@@ -476,6 +476,8 @@ def main():
     lint_parser = subparsers.add_parser('relint', help='re-run pylint')
     lint_parser.add_argument('--pairs', action=argparse.BooleanOptionalAction, default=False,
                              help='whether or not to validate __author__ variables for pairs')
+    lint_parser.add_argument('--deduction', action=argparse.BooleanOptionalAction, default=True,
+                              help='whether or not to give deduction on the style')
     subparsers.add_parser('finalise', help='package results for upload')
     args = parser.parse_args()
     if args.verb == 'begin':
