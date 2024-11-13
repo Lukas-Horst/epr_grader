@@ -93,6 +93,7 @@ in einer Zip-Datei hochladen" hochgeladen werden.
 Die Gesamtbewertungstabelle kann unter "Bewertungstabelle hochladen" hochgeladen werden. Dabei 
 muss der Haken bei "Update von Datensätzen zulassen, ..." gesetzt werden.
 
+Wenn man den finalise Befehl bei Änderungen erneut ausführen möchte, muss man vorher den Ordner `korrekturen` und die Zip-Datei löschen.
 
 ## Änderung der Style-Einstellungen
 
