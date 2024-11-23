@@ -226,9 +226,10 @@ def remove_unnecessary_violations(style_check: str):
         # Upper case violations
         elif "C0103" in line and "doesn't conform to UPPER_CASE naming style" in line:
             continue
-        # Allowing variable and argument names with only one char
+        # Allowing variable, argument and attribute names with only one char
         elif ("C0103" in line and "doesn't conform to snake_case naming style" in line
-              and ('Argument name "' in line or 'Variable name "' in line)):
+              and ('Argument name "' in line or 'Variable name "' in line
+                   or "Attribute name" in line)):
             start_index = line.find('"') + 1
             end_index = line.find('"', start_index)
             argument_name = line[start_index:end_index]
