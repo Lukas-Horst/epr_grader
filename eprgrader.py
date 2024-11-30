@@ -209,6 +209,7 @@ def remove_unnecessary_violations(style_check: str):
     skip_count = 0
 
     e501_pattern = re.compile(r"E501 line too long \((\d+) > 79 characters\)")
+    e231_pattern = re.compile(r"f['\"].*\{.*?:.+?}.*['\"]")
 
     for i, line in enumerate(lines):
         if skip_count > 0:
@@ -238,8 +239,10 @@ def remove_unnecessary_violations(style_check: str):
         # Allowing all module names
         elif "C0103" in line and "Module name" in line:
             continue
-        # Ignoring a missing whitespace after : in a print command
-        elif "E231" in line and "after ':'" in line and "print(" in lines[i + 1]:
+        # Ignoring a missing whitespace after : in a print command or in a curly bracket of an f-
+        # string
+        elif "E231" in line and "after ':'" in line and ("print(" in lines[i + 1] or
+                                                         e231_pattern.search(lines[i + 1])):
             skip_count = 2
             continue
         filtered_lines.append(line)
