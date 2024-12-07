@@ -146,7 +146,7 @@ def pylint_context(stdout, workdir):
     sys.stdout = sys.__stdout__
 
 
-def lint_files(folders, author_pairs, deduction: bool):
+def lint_files(folders, author_pairs, deduction: bool, docstring_deduction: bool):
     """Run pylint and pycodestyle on all Python files anywhere within `folders'."""
     count = 0
     total = len(folders)
@@ -156,8 +156,8 @@ def lint_files(folders, author_pairs, deduction: bool):
         count += 1
         print(f" ({str(count).rjust(len(str(total)))}/{total}) Checking {folder.name}")
         pythons = list(map(pathlib.Path.resolve,
-                            filter(lambda p: "__MACOSX" not in p.parts and ".venv" not in p.parts,
-                                    folder.glob('**/*.py'))))
+                           filter(lambda p: "__MACOSX" not in p.parts and ".venv" not in p.parts,
+                                  folder.glob('**/*.py'))))
         if not pythons:
             continue
         pycount = 0
@@ -187,7 +187,7 @@ def lint_files(folders, author_pairs, deduction: bool):
                 style_check = remove_unnecessary_violations(lintcache.getvalue())
             else:
                 style_check = ""
-            violation_checker = ViolationChecker(style_check, deduction)
+            violation_checker = ViolationChecker(style_check, deduction, docstring_deduction)
             violation_checker.check_violations()
             if violation_checker.count_violations(-1) == 0:
                 style_check = "Alles sieht gut aus -- weiter so!\n"
@@ -266,7 +266,7 @@ def safe_extract_zip(zip_obj: zipfile.ZipFile, parent: pathlib.Path):
 
 
 def begin_grading(folder: pathlib.Path, ratings_file: pathlib.Path, check_style: bool,
-                  author_pairs: bool, deduction: bool):
+                  author_pairs: bool, deduction: bool, docstring_deduction: bool):
     print("Extracting downloads...")
     downloads = list(folder.glob('**/*.zip'))
     count = 0
@@ -292,7 +292,7 @@ def begin_grading(folder: pathlib.Path, ratings_file: pathlib.Path, check_style:
                       if f.is_dir()]
     if check_style:
         print("Running style check...")
-        lint_files(target_folders, author_pairs, deduction)
+        lint_files(target_folders, author_pairs, deduction, docstring_deduction)
     else:
         print("(Style check skipped.)")
     print("Copying ratings table...")
@@ -477,20 +477,26 @@ def main():
                               help='whether or not to validate __author__ variables for pairs')
     begin_parser.add_argument('--deduction', action=argparse.BooleanOptionalAction, default=True,
                               help='whether or not to give deduction on the style')
+    begin_parser.add_argument('--docstringDeduction', action=argparse.BooleanOptionalAction,
+                              default=True,
+                              help='whether or not to give deduction on docstrings')
     lint_parser = subparsers.add_parser('relint', help='re-run pylint')
     lint_parser.add_argument('--pairs', action=argparse.BooleanOptionalAction, default=False,
                              help='whether or not to validate __author__ variables for pairs')
     lint_parser.add_argument('--deduction', action=argparse.BooleanOptionalAction, default=True,
-                              help='whether or not to give deduction on the style')
+                             help='whether or not to give deduction on the style')
+    lint_parser.add_argument('--docstringDeduction', action=argparse.BooleanOptionalAction,
+                             default=True,
+                             help='whether or not to give deduction on docstrings')
     subparsers.add_parser('finalise', help='package results for upload')
     args = parser.parse_args()
     if args.verb == 'begin':
         begin_grading(pathlib.Path(args.folder), pathlib.Path(args.table), args.stylecheck,
-                      args.pairs, args.deduction)
+                      args.pairs, args.deduction, args.docstringDeduction)
     elif args.verb == 'relint':
         lint_files([f for f in itertools.chain.from_iterable(
             (group.iterdir() for group in pathlib.Path(args.folder).glob('**/abgaben'))) if
-                    f.is_dir()], args.pairs, args.deduction)
+                    f.is_dir()], args.pairs, args.deduction, args.docstringDeduction)
     elif args.verb == 'finalise':
         finalise_grading(pathlib.Path(args.folder))
 

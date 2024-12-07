@@ -38,7 +38,8 @@ python eprgrader.py begin --table Bewertungstabelle_EPR_0.xlsx
 Zusätzliche Optionen:
 * `--no-stylecheck`: Überspringt die PEP8-Prüfung und verhindert das Anlegen der `stylecheck.txt`-Dateien für jede Abgabe.
 * `--pairs`: Überprüft die `__author__`-Variable nach dem Format für Paaraufgaben.
-* `--no-deduction`: Wenn es noch keinen Abzug für Stylefehler gibt.
+* `--no-deduction`: Wenn es noch keinen Abzug für Stylefehler und docstrings gibt.
+* `--no-docstringDeduction`: Wenn es keinen Abzug für docstrings geben soll.
 
 Hierdurch werden alle zip-Archive entpackt, die Bewertungstabellen kopiert und für jeden Teilnehmer
 entsprechend umbenannt, und ggf. der Stylechecker ausgeführt.
@@ -69,7 +70,8 @@ python eprgrader.py relint
 
 Zusätzliche Optionen:
 * `--pairs`: Überprüft die `__author__`-Variable nach dem Format für Paaraufgaben.
-* `--no-deduction`: Wenn es noch keinen Abzug für Stylefehler gibt.
+* `--no-deduction`: Wenn es noch keinen Abzug für Stylefehler und docstrings gibt.
+* `--no-docstringDeduction`: Wenn es keinen Abzug für docstrings geben soll.
 
 ## Abschluss
 
